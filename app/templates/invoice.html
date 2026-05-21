@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 9pt;
+                color: #a0aec0;
+            }
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2d3748;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .invoice-header {
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 25px;
+            margin-bottom: 35px;
+        }
+
+        .title {
+            font-size: 26pt;
+            font-weight: 800;
+            color: #1a365d;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 0;
+        }
+
+        .customer-details {
+            margin-bottom: 35px;
+            background-color: #f8fafc;
+            padding: 16px;
+            border-radius: 6px;
+            width: 45%;
+        }
+
+        .customer-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            color: #718096;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .customer-name {
+            font-size: 12pt;
+            color: #1a202c;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            page-break-inside: auto;
+        }
+
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #4a5568;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 8pt;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #cbd5e1;
+            padding: 12px 14px;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 10.5pt;
+            color: #4a5568;
+        }
+
+        .col-name { text-align: left; width: 45%; }
+        .col-qty { text-align: right; width: 15%; }
+        .col-price { text-align: right; width: 20%; }
+        .col-total { text-align: right; width: 20%; }
+        
+        th.col-qty, th.col-price, th.col-total { text-align: right; }
+
+        .total-row td {
+            border-bottom: none;
+            padding-top: 20px;
+        }
+
+        .total-label {
+            text-align: right;
+            font-weight: 700;
+            font-size: 11pt;
+            color: #1a365d;
+        }
+
+        .total-amount {
+            text-align: right;
+            font-weight: 800;
+            font-size: 13pt;
+            color: #1a365d;
+            border-bottom: 2px double #1a365d !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="invoice-header">
+        <h1 class="title">Invoice</h1>
+    </div>
+
+    <div class="customer-details">
+        <div class="customer-label">Bill To</div>
+        <p class="customer-name">{{ customer_name }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="col-name">Item Description</th>
+                <th class="col-qty">Quantity</th>
+                <th class="col-price">Price</th>
+                <th class="col-total">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="col-name">{{ item.name }}</td>
+                <td class="col-qty">{{ item.quantity }}</td>
+                <td class="col-price">&#8358;{{ item.price }}</td>
+                <td class="col-total">&#8358;{{ item.total }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td colspan="2"></td>
+                <td class="total-label">Grand Total:</td>
+                <td class="total-amount">&#8358;{{ grand_total }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
