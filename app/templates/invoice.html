@@ -4,68 +4,114 @@
     <meta charset="UTF-8">
     <title>Invoice</title>
     <style>
+        
+
         @page {
             size: A4;
-            margin: 20mm;
-            @bottom-right {
+            margin: 18mm 20mm;
+            @bottom-center {
                 content: "Page " counter(page) " of " counter(pages);
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                font-size: 9pt;
-                color: #a0aec0;
+                font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #9ca3af;
+                letter-spacing: 0.5px;
             }
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #2d3748;
-            line-height: 1.5;
+            font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+            color: #1c1917;
+            line-height: 1.6;
             margin: 0;
             padding: 0;
+            background: #fff;
         }
 
-        .invoice-header {
-            border-bottom: 2px solid #edf2f7;
-            padding-bottom: 25px;
-            margin-bottom: 35px;
+        /* ── Header ── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 28px;
+            margin-bottom: 36px;
+            border-bottom: 1px solid #e7e5e4;
         }
 
-        .title {
-            font-size: 26pt;
-            font-weight: 800;
-            color: #1a365d;
+        .brand-block {}
+
+        .brand-name {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 11pt;
+            font-weight: 600;
+            color: #1c1917;
+            letter-spacing: 0.5px;
+            margin: 0 0 2px 0;
+        }
+
+        .brand-tagline {
+            font-size: 8pt;
+            color: #a8a29e;
+            font-weight: 300;
+            margin: 0;
+            letter-spacing: 0.3px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 22pt;
+            font-weight: 400;
+            color: #1c1917;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 0 0 6px 0;
+            line-height: 1;
+        }
+
+        /* ── Bill-to block ── */
+        .bill-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        .bill-to {
+            background: #fafaf9;
+            border-left: 3px solid #1c1917;
+            padding: 14px 18px;
+            min-width: 220px;
+        }
+
+        .bill-label {
+            font-size: 7.5pt;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            margin: 0;
-        }
-
-        .customer-details {
-            margin-bottom: 35px;
-            background-color: #f8fafc;
-            padding: 16px;
-            border-radius: 6px;
-            width: 45%;
-        }
-
-        .customer-label {
-            font-size: 8pt;
-            text-transform: uppercase;
-            color: #718096;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-            font-weight: 700;
-        }
-
-        .customer-name {
-            font-size: 12pt;
-            color: #1a202c;
+            color: #a8a29e;
             font-weight: 600;
-            margin: 0;
+            margin: 0 0 6px 0;
         }
 
+        .bill-name {
+            font-size: 12pt;
+            font-weight: 600;
+            color: #1c1917;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        /* ── Items table ── */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 0;
             page-break-inside: auto;
         }
 
@@ -74,69 +120,133 @@
             page-break-after: auto;
         }
 
+        thead tr {
+            border-top: 1px solid #1c1917;
+            border-bottom: 1px solid #1c1917;
+        }
+
         th {
-            background-color: #f1f5f9;
-            color: #4a5568;
-            font-weight: 700;
+            font-size: 7.5pt;
             text-transform: uppercase;
-            font-size: 8pt;
-            letter-spacing: 1px;
-            border-bottom: 2px solid #cbd5e1;
-            padding: 12px 14px;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+            color: #1c1917;
+            padding: 10px 12px;
+            background: transparent;
         }
 
         td {
-            padding: 14px;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 13px 12px;
+            font-size: 10pt;
+            color: #44403c;
+            border-bottom: 1px solid #f0ede9;
+            font-weight: 400;
+        }
+
+        tbody tr:last-of-type td {
+            border-bottom: 1px solid #d6d3d1;
+        }
+
+        tbody tr:hover td {
+            background: #fafaf9;
+        }
+
+        .col-name   { text-align: left;  width: 46%; }
+        .col-qty    { text-align: right; width: 14%; }
+        .col-price  { text-align: right; width: 20%; }
+        .col-total  { text-align: right; width: 20%; }
+
+        th.col-qty,
+        th.col-price,
+        th.col-total { text-align: right; }
+
+        /* item name emphasis */
+        td.col-name {
+            font-weight: 500;
+            color: #1c1917;
+        }
+
+        /* ── Totals ── */
+        .totals-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .totals-block {
+            width: 42%;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 7px 0;
+            border-bottom: 1px solid #f0ede9;
+        }
+
+        .totals-row.grand {
+            border-top: 2px solid #1c1917;
+            border-bottom: 2px solid #1c1917;
+            padding: 11px 0;
+            margin-top: 4px;
+        }
+
+        .totals-row .t-label {
+            font-size: 8.5pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #78716c;
+            font-weight: 500;
+        }
+
+        .totals-row.grand .t-label {
+            font-size: 9pt;
+            color: #1c1917;
+            font-weight: 600;
+        }
+
+        .totals-row .t-value {
             font-size: 10.5pt;
-            color: #4a5568;
+            font-weight: 500;
+            color: #44403c;
         }
 
-        .col-name { text-align: left; width: 45%; }
-        .col-qty { text-align: right; width: 15%; }
-        .col-price { text-align: right; width: 20%; }
-        .col-total { text-align: right; width: 20%; }
-        
-        th.col-qty, th.col-price, th.col-total { text-align: right; }
-
-        .total-row td {
-            border-bottom: none;
-            padding-top: 20px;
+        .totals-row.grand .t-value {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 14pt;
+            font-weight: 600;
+            color: #1c1917;
         }
 
-        .total-label {
-            text-align: right;
-            font-weight: 700;
-            font-size: 11pt;
-            color: #1a365d;
-        }
 
-        .total-amount {
-            text-align: right;
-            font-weight: 800;
-            font-size: 13pt;
-            color: #1a365d;
-            border-bottom: 2px double #1a365d !important;
-        }
     </style>
 </head>
 <body>
 
-    <div class="invoice-header">
-        <h1 class="title">Invoice</h1>
+    <div class="header">
+        <div class="brand-block">
+            <p class="brand-name">{{ business_name | default("") }}</p>
+            <p class="brand-tagline">{{ business_tagline | default("") }}</p>
+        </div>
+        <div class="invoice-meta">
+            <h1 class="invoice-title">Invoice</h1>
+        </div>
     </div>
 
-    <div class="customer-details">
-        <div class="customer-label">Bill To</div>
-        <p class="customer-name">{{ customer_name }}</p>
+    <div class="bill-section">
+        <div class="bill-to">
+            <p class="bill-label">Bill To</p>
+            <p class="bill-name">{{ customer_name }}</p>
+        </div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th class="col-name">Item Description</th>
-                <th class="col-qty">Quantity</th>
-                <th class="col-price">Price</th>
+                <th class="col-name">Description</th>
+                <th class="col-qty">Qty</th>
+                <th class="col-price">Unit Price</th>
                 <th class="col-total">Total</th>
             </tr>
         </thead>
@@ -149,13 +259,19 @@
                 <td class="col-total">&#8358;{{ item.total }}</td>
             </tr>
             {% endfor %}
-            <tr class="total-row">
-                <td colspan="2"></td>
-                <td class="total-label">Grand Total:</td>
-                <td class="total-amount">&#8358;{{ grand_total }}</td>
-            </tr>
         </tbody>
     </table>
+
+    <div class="totals-wrapper">
+        <div class="totals-block">
+            <div class="totals-row grand">
+                <span class="t-label">Grand Total</span>
+                <span class="t-value">&#8358;{{ grand_total }}</span>
+            </div>
+        </div>
+    </div>
+
+
 
 </body>
 </html>
