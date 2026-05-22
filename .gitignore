@@ -1,0 +1,13 @@
+.env
+.pyc
+__pycache__
+.db
+.DB_STORE
+.sqlite
+.sql
+.venv/
+.pdf
+.bak
+.dat
+.dir
+note.txt
