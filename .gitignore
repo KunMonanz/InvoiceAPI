@@ -11,3 +11,7 @@ __pycache__
 .dat
 .dir
 note.txt
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+saved_invoices/invoice_Somto_Muonanu.pdf

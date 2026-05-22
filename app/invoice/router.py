@@ -1,5 +1,6 @@
 import io
 import os
+import uuid
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from .schema import InvoiceList
@@ -10,6 +11,7 @@ router = APIRouter(prefix="/api/v1/invoices")
 
 UPLOAD_DIR = "./saved_invoices"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 @router.post("/")
 async def create_invoice(request: Request, payload: InvoiceList):
@@ -23,7 +25,11 @@ async def create_invoice(request: Request, payload: InvoiceList):
         business_name=business_name
     )
 
-    filename = f"invoice_{customer_name.replace(' ', '_')}.pdf"
+    safe_name = customer_name.replace(' ', '_')
+    
+    unique_id = uuid.uuid4().hex[:8]
+    filename = f"invoice_{safe_name}_{unique_id}.pdf"
+
     file_path = os.path.join(UPLOAD_DIR, filename)
     
     with open(file_path, "wb") as f:

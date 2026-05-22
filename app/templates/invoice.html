@@ -4,274 +4,300 @@
     <meta charset="UTF-8">
     <title>Invoice</title>
     <style>
-        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 
         @page {
             size: A4;
-            margin: 18mm 20mm;
+            margin: 0;
             @bottom-center {
                 content: "Page " counter(page) " of " counter(pages);
-                font-family: 'DM Sans', Helvetica, Arial, sans-serif;
-                font-size: 8pt;
-                color: #9ca3af;
-                letter-spacing: 0.5px;
+                font-family: 'Inter', sans-serif;
+                font-size: 7.5pt;
+                color: #9a8c7e;
+                letter-spacing: 0.3px;
+                margin-bottom: 10mm;
             }
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'DM Sans', Helvetica, Arial, sans-serif;
-            color: #1c1917;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
+            font-family: 'Inter', sans-serif;
             background: #fff;
+            color: #1a1612;
+            line-height: 1.55;
+            width: 210mm;
+            min-height: 297mm;
+            position: relative;
         }
 
-        /* ── Header ── */
-        .header {
+        /* ── Top band ── */
+        .top-band {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding-bottom: 28px;
-            margin-bottom: 36px;
-            border-bottom: 1px solid #e7e5e4;
+            width: 100%;
+            height: 48mm;
         }
 
-        .brand-block {}
+        .top-left {
+            background: #1c1814;
+            width: 55%;
+            padding: 9mm 9mm 8mm 11mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .top-left::after {
+            content: "INV";
+            position: absolute;
+            bottom: -10mm;
+            right: -3mm;
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 80pt;
+            font-weight: 400;
+            color: rgba(255,255,255,0.04);
+            line-height: 1;
+            pointer-events: none;
+        }
 
         .brand-name {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-size: 11pt;
+            font-family: 'Inter', sans-serif;
+            font-size: 13pt;
             font-weight: 600;
-            color: #1c1917;
-            letter-spacing: 0.5px;
-            margin: 0 0 2px 0;
+            color: #fff;
+            letter-spacing: -0.2px;
+            line-height: 1.25;
         }
 
         .brand-tagline {
-            font-size: 8pt;
-            color: #a8a29e;
-            font-weight: 300;
-            margin: 0;
-            letter-spacing: 0.3px;
-        }
-
-        .invoice-meta {
-            text-align: right;
-        }
-
-        .invoice-title {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-size: 22pt;
+            font-size: 7.5pt;
+            color: #6e6259;
+            letter-spacing: 0.5px;
             font-weight: 400;
-            color: #1c1917;
-            letter-spacing: 2px;
+            margin-top: 3px;
+        }
+
+        .invoice-word {
+            font-family: 'Inter', sans-serif;
+            font-size: 7pt;
+            font-weight: 500;
+            color: #c9a96e;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            margin: 0 0 6px 0;
+        }
+
+        .top-right {
+            background: #c9a96e;
+            width: 45%;
+            padding: 9mm 11mm 8mm 9mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .invoice-label {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 36pt;
+            font-weight: 400;
+            font-style: italic;
+            color: #1c1814;
+            letter-spacing: -0.5px;
             line-height: 1;
         }
 
-        /* ── Bill-to block ── */
-        .bill-section {
+        /* ── Body ── */
+        .content {
+            padding: 9mm 11mm 12mm 11mm;
+        }
+
+        .meta-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 40px;
+            margin-bottom: 9mm;
+            padding-bottom: 7mm;
+            border-bottom: 1px solid #e4ddd5;
         }
 
-        .bill-to {
-            background: #fafaf9;
-            border-left: 3px solid #1c1917;
-            padding: 14px 18px;
-            min-width: 220px;
-        }
-
-        .bill-label {
-            font-size: 7.5pt;
+        .section-label {
+            font-size: 6.5pt;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #a8a29e;
+            letter-spacing: 2px;
+            color: #c9a96e;
             font-weight: 600;
-            margin: 0 0 6px 0;
+            margin-bottom: 5px;
         }
 
         .bill-name {
-            font-size: 12pt;
+            font-family: 'Inter', sans-serif;
+            font-size: 13pt;
             font-weight: 600;
-            color: #1c1917;
-            margin: 0;
+            color: #1c1814;
             line-height: 1.3;
         }
 
-        /* ── Items table ── */
+        /* ── Table ── */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 0;
             page-break-inside: auto;
         }
 
-        tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-        }
+        tr { page-break-inside: avoid; page-break-after: auto; }
 
         thead tr {
-            border-top: 1px solid #1c1917;
-            border-bottom: 1px solid #1c1917;
+            border-bottom: 1.5px solid #1c1814;
         }
 
         th {
-            font-size: 7.5pt;
+            font-size: 6.5pt;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
+            letter-spacing: 1.5px;
             font-weight: 600;
-            color: #1c1917;
-            padding: 10px 12px;
+            color: #1c1814;
+            padding: 0 10px 9px 10px;
             background: transparent;
+            font-family: 'Inter', sans-serif;
         }
 
         td {
-            padding: 13px 12px;
-            font-size: 10pt;
-            color: #44403c;
-            border-bottom: 1px solid #f0ede9;
+            padding: 11px 10px;
+            font-size: 9.5pt;
+            color: #3a3028;
+            border-bottom: 1px solid #ede7de;
+            font-family: 'Inter', sans-serif;
             font-weight: 400;
         }
 
+        tbody tr:nth-child(even) td {
+            background: #faf7f3;
+        }
+
         tbody tr:last-of-type td {
-            border-bottom: 1px solid #d6d3d1;
+            border-bottom: 1.5px solid #1c1814;
         }
 
-        tbody tr:hover td {
-            background: #fafaf9;
-        }
+        .col-name  { text-align: left;  width: 46%; }
+        .col-qty   { text-align: right; width: 14%; }
+        .col-price { text-align: right; width: 20%; }
+        .col-total { text-align: right; width: 20%; }
 
-        .col-name   { text-align: left;  width: 46%; }
-        .col-qty    { text-align: right; width: 14%; }
-        .col-price  { text-align: right; width: 20%; }
-        .col-total  { text-align: right; width: 20%; }
+        th.col-qty, th.col-price, th.col-total { text-align: right; }
 
-        th.col-qty,
-        th.col-price,
-        th.col-total { text-align: right; }
-
-        /* item name emphasis */
         td.col-name {
+            font-size: 10pt;
             font-weight: 500;
-            color: #1c1917;
+            color: #1c1814;
         }
 
-        /* ── Totals ── */
-        .totals-wrapper {
+        td.col-total {
+            font-weight: 600;
+            color: #1c1814;
+        }
+
+        /* ── Grand total ── */
+        .total-section {
             display: flex;
             justify-content: flex-end;
-            margin-top: 24px;
+            margin-top: 7mm;
         }
 
-        .totals-block {
-            width: 42%;
+        .total-box {
+            background: #1c1814;
+            padding: 5mm 9mm;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
         }
 
-        .totals-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            padding: 7px 0;
-            border-bottom: 1px solid #f0ede9;
-        }
-
-        .totals-row.grand {
-            border-top: 2px solid #1c1917;
-            border-bottom: 2px solid #1c1917;
-            padding: 11px 0;
-            margin-top: 4px;
-        }
-
-        .totals-row .t-label {
-            font-size: 8.5pt;
+        .total-box-label {
+            font-size: 6.5pt;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #78716c;
-            font-weight: 500;
-        }
-
-        .totals-row.grand .t-label {
-            font-size: 9pt;
-            color: #1c1917;
+            letter-spacing: 2px;
+            color: #c9a96e;
             font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
         }
 
-        .totals-row .t-value {
-            font-size: 10.5pt;
-            font-weight: 500;
-            color: #44403c;
+        .total-box-value {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 20pt;
+            font-weight: 400;
+            color: #fff;
+            letter-spacing: -0.3px;
+            line-height: 1;
+            white-space: nowrap;
         }
 
-        .totals-row.grand .t-value {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-size: 14pt;
-            font-weight: 600;
-            color: #1c1917;
+        .bottom-strip {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #c9a96e;
         }
-
-
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="brand-block">
-            <p class="brand-name">{{ business_name | default("") }}</p>
-            <p class="brand-tagline">{{ business_tagline | default("") }}</p>
+    <div class="top-band">
+        <div class="top-left">
+            <div>
+                <div class="brand-name">{{ business_name | default("") }}</div>
+                <div class="brand-tagline">{{ business_tagline | default("") }}</div>
+            </div>
+            <div class="invoice-word">Invoice</div>
         </div>
-        <div class="invoice-meta">
-            <h1 class="invoice-title">Invoice</h1>
-        </div>
-    </div>
-
-    <div class="bill-section">
-        <div class="bill-to">
-            <p class="bill-label">Bill To</p>
-            <p class="bill-name">{{ customer_name }}</p>
+        <div class="top-right">
+            <div class="invoice-label">Invoice</div>
         </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th class="col-name">Description</th>
-                <th class="col-qty">Qty</th>
-                <th class="col-price">Unit Price</th>
-                <th class="col-total">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr>
-                <td class="col-name">{{ item.name }}</td>
-                <td class="col-qty">{{ item.quantity }}</td>
-                <td class="col-price">&#8358;{{ item.price }}</td>
-                <td class="col-total">&#8358;{{ item.total }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="content">
 
-    <div class="totals-wrapper">
-        <div class="totals-block">
-            <div class="totals-row grand">
-                <span class="t-label">Grand Total</span>
-                <span class="t-value">&#8358;{{ grand_total }}</span>
+        <div class="meta-row">
+            <div class="bill-block">
+                <div class="section-label">Bill To</div>
+                <div class="bill-name">{{ customer_name }}</div>
             </div>
         </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-name">Description</th>
+                    <th class="col-qty">Qty</th>
+                    <th class="col-price">Unit Price</th>
+                    <th class="col-total">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td class="col-name">{{ item.name }}</td>
+                    <td class="col-qty">{{ item.quantity }}</td>
+                    <td class="col-price">&#8358;{{ item.price }}</td>
+                    <td class="col-total">&#8358;{{ item.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <div class="total-box">
+                <span class="total-box-label">Grand Total</span>
+                <span class="total-box-value">&#8358;{{ grand_total }}</span>
+            </div>
+        </div>
+
     </div>
 
-
+    <div class="bottom-strip"></div>
 
 </body>
 </html>
