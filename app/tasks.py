@@ -2,11 +2,10 @@
 import os
 import time
 from config.celery_config import celery
+from config.settings import UPLOAD_DIR, FILE_AGE_THRESHOLD
+ 
 
 
-UPLOAD_DIR = "./saved_invoices" 
-
-FILE_AGE_THRESHOLD = 86400 
 
 @celery.task
 def delete_saved_invoices():
@@ -18,7 +17,7 @@ def delete_saved_invoices():
     deleted_count = 0
 
     for filename in os.listdir(UPLOAD_DIR):
-        file_path = os.path.join(UPLOAD_DIR, filename)
+        file_path = os.path.join(UPLOAD_DIR, filename) # type: ignore
 
         if os.path.isfile(file_path):
             file_creation_time = os.path.getmtime(file_path)

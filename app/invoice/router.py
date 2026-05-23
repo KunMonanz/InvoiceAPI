@@ -3,14 +3,15 @@ import os
 import uuid
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
+
+from app.config.settings import UPLOAD_DIR
 from .schema import InvoiceList
 from .utils.pdf_utils import render_html_to_pdf
 
 router = APIRouter(prefix="/api/v1/invoices")
 
 
-UPLOAD_DIR = "./saved_invoices"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(UPLOAD_DIR, exist_ok=True) # type: ignore
 
 
 @router.post("/")
