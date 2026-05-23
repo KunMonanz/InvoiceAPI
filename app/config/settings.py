@@ -14,3 +14,9 @@ GOOGLE_SESSION_SECRET: str | None = os.getenv("GOOGLE_SESSION_SECRET")
 
 JWT_SECRET_KEY: str | None = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM: str | None = os.getenv("JWT_ALGORITHM")  
+
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASS = os.getenv("DB_PASS", "password")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME")
