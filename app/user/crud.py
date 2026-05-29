@@ -1,5 +1,6 @@
 from pydantic import EmailStr
 
+from app.models.black_listed_tokens import BlackListedToken
 from app.models.users import User
 from app.security.password import hash_password
 
@@ -42,3 +43,11 @@ class UserRepository():
         ) 
         
         return user
+
+    @staticmethod
+    async def get_user_by_email(email: EmailStr):
+        return await User.get_or_none(email=email)
+
+    @staticmethod
+    async def blacklist_token(jti: str):
+        await BlackListedToken.create(jti=jti)

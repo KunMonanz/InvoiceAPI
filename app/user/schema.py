@@ -31,3 +31,9 @@ class UserResponse(BaseModel):
             raise ValueError("If a lastname is provided, a first name should be provided as well")
         
         return self
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+    

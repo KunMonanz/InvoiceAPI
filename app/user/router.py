@@ -1,12 +1,17 @@
 from datetime import timedelta
+import uuid
 
+from argon2 import verify_password
 from fastapi import APIRouter, HTTPException, Request, Response, status
-from app.security.jwt import create_access_token
+from app.security.jwt import create_access_token, decode_access_token
+from app.security.password import dummy_hash_and_verify
 from app.user.crud import UserRepository
-from app.user.schema import UserRegister, UserResponse
+from app.user.schema import UserLogin, UserRegister, UserResponse
 # from app.main import oauth
 
 from authlib.integrations.starlette_client import OAuthError
+
+from app.user.utils import get_jwt_from_headers
 
 router = APIRouter(
     prefix="/api/v1/auth"
@@ -82,3 +87,55 @@ async def create_user(
         password=user_registration_payload.password,
         organization_name=user_registration_payload.organization_name
     )
+
+
+@router.post("/login")
+async def login(user_login_payload: UserLogin):
+    user = await user_repository.get_user_by_email(user_login_payload.email)
+    
+    invalid_email_or_password_exception = HTTPException(
+                                            detail="Incorrect email or password",
+                                            status_code=status.HTTP_401_UNAUTHORIZED,
+                                            headers={"WWW-Authenticate": "Bearer"}
+                                        )
+    
+    if not user:
+        dummy_hash_and_verify(user_login_payload.password)
+        raise invalid_email_or_password_exception
+    
+    if not verify_password(user.password, user_login_payload.password): # type: ignore
+        raise invalid_email_or_password_exception
+    
+    data = {
+        "sub": str(user.id),
+        "jti": str(uuid.uuid4)
+    }
+    
+    access_token = create_access_token(data, timedelta(hours=24))
+    
+    return Response(
+        {
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+    )
+        
+    
+@router.post("/logout")
+async def logout(request: Request):
+    raw_jwt = get_jwt_from_headers(request)
+    payload = await decode_access_token(raw_jwt)
+    jti = payload.get("jti")
+    if not jti:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token"
+        )
+    await user_repository.blacklist_token(jti)
+    return Response(
+        content={
+                    "success": "Logged out successfully"
+                },
+        status_code=status.HTTP_200_OK
+    )
+    
