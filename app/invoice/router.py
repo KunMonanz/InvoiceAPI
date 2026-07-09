@@ -15,7 +15,10 @@ os.makedirs(UPLOAD_DIR, exist_ok=True) # type: ignore
 
 
 @router.post("/")
-async def create_invoice(request: Request, payload: InvoiceList):
+async def create_invoice(
+    request: Request, 
+    payload: InvoiceList
+):
     customer_name = payload.customer_name
     business_name = payload.business_name
     items = [item.model_dump() for item in payload.invoice]

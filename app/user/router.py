@@ -2,7 +2,8 @@ from datetime import timedelta
 import uuid
 
 from argon2 import verify_password
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from app.security.dependency import get_current_user
 from app.security.jwt import create_access_token, decode_access_token
 from app.security.password import dummy_hash_and_verify
 from app.user.crud import UserRepository
@@ -138,4 +139,25 @@ async def logout(request: Request):
                 },
         status_code=status.HTTP_200_OK
     )
-    
+
+
+@router.patch("/deactivate")
+async def deactivate(current_user=Depends(get_current_user)):
+    await user_repository.deactivate_user(current_user)
+    return Response(
+        {
+            "success": "Account deactivated successfully"
+        },
+        status_code=status.HTTP_200_OK
+    )
+
+
+@router.patch("/activate")
+async def activate(current_user=Depends(get_current_user)):
+    await user_repository.activate_user(current_user)
+    return Response(
+        {
+            "success": "Account reactivated successfully"
+        },
+        status_code=status.HTTP_200_OK
+    )

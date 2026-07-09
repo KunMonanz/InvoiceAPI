@@ -8,16 +8,7 @@ class UserRegister(BaseModel):
     first_name: Optional[str]
     last_name: Optional[str]
     organization_name: Optional[str]
-    
 
-class UserResponse(BaseModel):
-    email: EmailStr
-    first_name: Optional[str]
-    last_name: Optional[str]
-    organization_name: Optional[str]
-    
-    model_config = ConfigDict(from_attributes=True)
-    
     @model_validator(mode="after")
     def validate_conditional_fileds(self):
         if not self.first_name or not self.last_name:
@@ -31,6 +22,16 @@ class UserResponse(BaseModel):
             raise ValueError("If a lastname is provided, a first name should be provided as well")
         
         return self
+    
+
+class UserResponse(BaseModel):
+    email: EmailStr
+    first_name: Optional[str]
+    last_name: Optional[str]
+    organization_name: Optional[str]
+    is_active: bool
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserLogin(BaseModel):

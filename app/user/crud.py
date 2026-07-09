@@ -49,5 +49,25 @@ class UserRepository():
         return await User.get_or_none(email=email)
 
     @staticmethod
+    async def get_user_by_id(user_id: str):
+        return await User.get_or_none(id=user_id)
+    
+    @staticmethod
+    async def deactivate_user(user: User):
+        if user.is_active:
+            return user
+        user.is_active = False
+        await user.save()
+        return user
+    
+    @staticmethod
+    async def activate_user(user: User):
+        if not user.is_active:
+            return user
+        user.is_active = True
+        await user.save()
+        return user
+        
+    @staticmethod
     async def blacklist_token(jti: str):
         await BlackListedToken.create(jti=jti)
