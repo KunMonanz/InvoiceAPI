@@ -11,7 +11,6 @@ __pycache__
 .dat
 .dir
 note.txt
-celerybeat-schedule.bak
-celerybeat-schedule.dat
-celerybeat-schedule.dir
+celerybeat-schedule.*
 saved_invoices/
+venv/

@@ -1,4 +1,5 @@
 from settings import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
+from sqlalchemy.orm import DeclarativeBase
 
 if not DB_HOST:
     raise Exception("DB_HOST missing")
@@ -10,6 +11,10 @@ if not DB_PORT:
     raise Exception("DB_PORT missing")
 if not DB_USER:
     raise Exception("DB_USER missing")
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 TORTOISE_CONFIG = {
