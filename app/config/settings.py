@@ -1,22 +1,41 @@
-import os
 from pathlib import Path
-from dotenv import load_dotenv
 
-load_dotenv()
+from pydantic import Field, computed_field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./uploads") 
-FILE_AGE_THRESHOLD: int = 86400 
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
-GOOGLE_CLIENT_ID: str | None = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_SECRET_KEY: str | None = os.getenv("GOOGLE_SECRET_KEY")
-GOOGLE_SESSION_SECRET: str | None = os.getenv("GOOGLE_SESSION_SECRET") 
+    UPLOAD_DIR: Path = Field(default=Path("./uploads"))
+    FILE_AGE_THRESHOLD: int = Field(default=86400, description="Age in seconds (24h)")
 
-JWT_SECRET_KEY: str | None = os.getenv("JWT_SECRET_KEY")
-JWT_ALGORITHM: str | None = os.getenv("JWT_ALGORITHM")  
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str | None = None
+    GOOGLE_SECRET_KEY: str | None = None
+    GOOGLE_SESSION_SECRET: str | None = None
 
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASS = os.getenv("DB_PASS", "password")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME")
+    # JWT
+    JWT_SECRET_KEY: str = Field(default="change-me-in-production")
+    JWT_ALGORITHM: str = Field(default="HS256")
+
+    # Database Settings
+    DB_USER: str = Field(default="postgres")
+    DB_PASS: str | None = None
+    DB_HOST: str = Field(default="localhost")
+    DB_PORT: int = Field(default=5432)
+    DB_NAME: str = Field(default="postgres")
+
+    @computed_field
+    @property
+    def TORTOISE_DATABASE_URL(self) -> str:
+        """Constructs a Tortoise-compatible postgres connection string."""
+        auth = f"{self.DB_USER}:{self.DB_PASS}@" if self.DB_PASS else f"{self.DB_USER}@"
+        return f"postgres://{auth}{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
+
+settings = Settings()

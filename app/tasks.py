@@ -4,8 +4,9 @@ import time
 import uuid
 
 from celery import shared_task
-from config.celery_config import celery
-from config.settings import FILE_AGE_THRESHOLD, UPLOAD_DIR
+
+from app.config.celery_config import celery
+from app.config.settings import FILE_AGE_THRESHOLD, UPLOAD_DIR
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 

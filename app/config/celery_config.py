@@ -1,14 +1,11 @@
 import os
+
 from celery import Celery
 from celery.schedules import crontab
 
 REDIS_URL = os.getenv("REDIS_URL")
 
-celery = Celery(
-    "worker",
-    broker=REDIS_URL,
-    backend=REDIS_URL
-)
+celery = Celery("worker", broker=REDIS_URL, backend=REDIS_URL)
 
 celery.conf.update(
     task_track_started=True,
@@ -22,4 +19,4 @@ celery.conf.beat_schedule = {
     },
 }
 
-celery.conf.timezone = "UTC" # type: ignore
+celery.conf.timezone = "UTC"  # type: ignore

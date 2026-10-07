@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import List, Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -12,8 +12,8 @@ class InvoiceItem(BaseModel):
 
 class InvoiceList(BaseModel):
     customer_name: str
-    business_name: Optional[str]
-    invoice: List[InvoiceItem]
+    business_name: str | None
+    invoice: list[InvoiceItem]
 
 
 class TaskStatusResponse(BaseModel):
