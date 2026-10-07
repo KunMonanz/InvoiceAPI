@@ -1,5 +1,6 @@
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Literal, Optional
+
 from pydantic import BaseModel
 
 
@@ -15,3 +16,10 @@ class InvoiceList(BaseModel):
     invoice: List[InvoiceItem]
 
 
+class TaskStatusResponse(BaseModel):
+    task_id: str
+    status: Literal["processing", "completed", "failed"]
+
+
+class ErrorResponse(BaseModel):
+    detail: str

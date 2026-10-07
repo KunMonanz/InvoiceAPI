@@ -1,45 +1,80 @@
-import io
 import os
 import uuid
 
-from fastapi import APIRouter, Request
-from fastapi.responses import StreamingResponse
+from celery.result import AsyncResult
+from fastapi import APIRouter, Path, Request, status
+from fastapi.exceptions import HTTPException
+from fastapi.responses import FileResponse, JSONResponse
 
-from app.config.settings import UPLOAD_DIR
+from app.invoice.responses import CREATE_INVOICE_TASK, GET_TASK_STATUS
+from app.tasks import render_html_to_pdf_task
 
-from .schema import InvoiceList
-from .utils.pdf_utils import render_html_to_pdf
+from .schema import InvoiceList, TaskStatusResponse
 
 router = APIRouter(prefix="/api/v1/invoices")
 
 
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-
-@router.post("/")
+@router.post(
+    "/",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=TaskStatusResponse,
+    summary="Create invoice generation task",
+    description="Asynchronously generates a PDF invoice and returns a Celery task ID.",
+    responses=CREATE_INVOICE_TASK,
+)
 async def create_invoice(request: Request, payload: InvoiceList):
-    customer_name = payload.customer_name
-    business_name = payload.business_name
     items = [item.model_dump() for item in payload.invoice]
 
-    invoice_pdf = render_html_to_pdf(
-        customer_name=customer_name, items=items, business_name=business_name
+    task = render_html_to_pdf_task.delay(  # pyright: ignore[reportCallIssue]
+        payload.customer_name, items, payload.business_name
     )
 
-    safe_name = customer_name.replace(" ", "_")
+    return TaskStatusResponse(task_id=task.id, status="processing")
 
-    unique_id = uuid.uuid4().hex[:8]
-    filename = f"invoice_{safe_name}_{unique_id}.pdf"
 
-    file_path = os.path.join(UPLOAD_DIR, filename)
+@router.get(
+    "/status/{task_id}",
+    summary="Check invoice status or download PDF",
+    description="Polls the task status. Returns status JSON while running, or the raw PDF once complete.",
+    responses=GET_TASK_STATUS,
+)
+async def get_task_status(task_id: str = Path(..., description="Celery task UUID")):
+    try:
+        uuid.UUID(task_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Invalid task ID format"
+        )
 
-    with open(file_path, "wb") as f:
-        f.write(invoice_pdf)  # type: ignore
+    res = AsyncResult(task_id)
 
-    pdf_stream = io.BytesIO(invoice_pdf)  # type: ignore
+    if res.state in ("PENDING", "STARTED", "RETRY"):
+        return JSONResponse(
+            status_code=status.HTTP_202_ACCEPTED,
+            content={"task_id": task_id, "status": "processing"},
+        )
 
-    return StreamingResponse(
-        pdf_stream,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename={filename}"},
+    if res.state == "FAILURE":
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": f"Task failed: {res.info!s}"},
+        )
+
+    if res.state == "SUCCESS":
+        result_data = res.result or {}
+        file_path = result_data.get("file_path")
+        filename = result_data.get("filename")
+
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Invoice file not found"
+            )
+
+        return FileResponse(
+            path=file_path, filename=filename, media_type="application/pdf"
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=f"Task ended in unexpected state: {res.state}",
     )

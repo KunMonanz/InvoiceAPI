@@ -1,9 +1,8 @@
 import os
-from decimal import Decimal
 
 from jinja2 import Environment, FileSystemLoader
 
-from app.invoice.schema import InvoiceItem
+from app.invoice.error import MissingTemplateException
 
 os.getenv("WEASYPRINT_DLL_DIRECTORIES")
 
@@ -32,7 +31,7 @@ def render_html_to_pdf(
         template = env.get_template("app/templates/invoice.html")
 
         if not template:
-            raise Exception("Template for invoice creation missing")
+            raise MissingTemplateException
 
         grand_total = 0
         processed_items = []
@@ -59,5 +58,5 @@ def render_html_to_pdf(
         )
 
         return HTML(string=html).write_pdf()
-    except Exception as e:
-        raise e
+    except Exception:
+        raise
