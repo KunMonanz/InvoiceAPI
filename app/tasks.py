@@ -6,27 +6,27 @@ import uuid
 from celery import shared_task
 
 from app.config.celery_config import celery
-from app.config.settings import FILE_AGE_THRESHOLD, UPLOAD_DIR
+from app.config.settings import settings
 
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
 
 @celery.task
 def delete_saved_invoices():
     """Scans UPLOAD_DIR and deletes files older than 24 hours."""
-    if not os.path.exists(UPLOAD_DIR):
-        return f"Directory {UPLOAD_DIR} does not exist. Skipping."
+    if not os.path.exists(settings.UPLOAD_DIR):
+        return f"Directory {settings.UPLOAD_DIR} does not exist. Skipping."
 
     now = time.time()
     deleted_count = 0
 
-    for filename in os.listdir(UPLOAD_DIR):
-        file_path = os.path.join(UPLOAD_DIR, filename)  # type: ignore
+    for filename in os.listdir(settings.UPLOAD_DIR):
+        file_path = os.path.join(settings.UPLOAD_DIR, filename)  # type: ignore
 
         if os.path.isfile(file_path):
             file_creation_time = os.path.getmtime(file_path)
 
-            if (now - file_creation_time) > FILE_AGE_THRESHOLD:
+            if (now - file_creation_time) > settings.FILE_AGE_THRESHOLD:
                 try:
                     os.remove(file_path)
                     deleted_count += 1
@@ -49,9 +49,9 @@ def render_html_to_pdf_task(
         safe_name = re.sub(r"[^\w\-]", "_", customer_name.strip())
         unique_id = uuid.uuid4().hex[:8]
         filename = f"invoice_{safe_name}_{unique_id}.pdf"
-        file_path = os.path.join(UPLOAD_DIR, filename)
+        file_path = os.path.join(settings.UPLOAD_DIR, filename)
 
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
         with open(file_path, "wb") as f:
             f.write(pdf_bytes)
 
