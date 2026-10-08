@@ -6,14 +6,12 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.config.settings import settings
+
 logger = logging.getLogger(__name__)
 
 
 def business_and_customer_key(request: Request) -> str:
-    """
-    Synchronous key function for SlowAPI.
-    Reads values directly from request.state injected by our custom middleware.
-    """
     biz_name = getattr(request.state, "rate_business_name", "none")
     cust_name = getattr(request.state, "rate_customer_name", "none")
 
@@ -26,7 +24,18 @@ def business_and_customer_key(request: Request) -> str:
     return f"rate_key:{identifier}"
 
 
-limiter = Limiter(key_func=business_and_customer_key)
+redis_url = settings.REDIS_URL
+
+if redis_url:
+    limiter = Limiter(key_func=business_and_customer_key, storage_uri=redis_url)
+    logger.info(
+        "SlowAPI successfully attached to persistent Upstash Redis URI backend."
+    )
+else:
+    limiter = Limiter(key_func=business_and_customer_key)
+    logger.warning(
+        "REDIS_URL missing. SlowAPI falling back to transient in-memory storage."
+    )
 
 
 class PayloadExtractorMiddleware(BaseHTTPMiddleware):
@@ -34,12 +43,11 @@ class PayloadExtractorMiddleware(BaseHTTPMiddleware):
         if request.method in ("POST", "PUT"):
             try:
                 body_bytes = await request.body()
-
                 if body_bytes:
                     body = json.loads(body_bytes)
                     if isinstance(body, dict):
                         cust = body.get("customer_name", "").strip().lower()
-                        biz = body.get("business_name", "")
+                        biz = body.get("business_name")
 
                         if cust:
                             request.state.rate_customer_name = cust

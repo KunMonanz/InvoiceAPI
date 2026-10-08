@@ -4,6 +4,7 @@ amqp==5.3.1
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
+APScheduler==3.11.3
 argon2-cffi==25.1.0
 argon2-cffi-bindings==25.1.0
 async-timeout==5.0.1
@@ -47,6 +48,7 @@ prompt_toolkit==3.0.52
 pyasn1==0.6.3
 pycparser==3.0
 pydantic==2.13.4
+pydantic-settings==2.15.0
 pydantic_core==2.46.4
 pydyf==0.12.1
 pyphen==0.17.2
@@ -68,6 +70,7 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 tzdata==2026.2
 tzlocal==5.3.1
+uuid6==2025.0.1
 uvicorn==0.47.0
 vine==5.1.0
 wcwidth==0.7.0

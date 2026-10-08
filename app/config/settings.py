@@ -4,6 +4,8 @@ from typing import Literal
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.config.celery_config import REDIS_URL
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -39,6 +41,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: Literal["development", "production"] = Field(
         default="development", description="Environment type"
     )
+
+    REDIS_URL: str = Field(default=REDIS_URL, description="Redis connection URL")
 
     @computed_field
     @property
