@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    ADMIN_CRON_SECRET: str | None = None
+
     @computed_field
     @property
     def TORTOISE_DATABASE_URL(self) -> str:

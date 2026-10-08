@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI
 from slowapi.errors import RateLimitExceeded
@@ -5,16 +7,25 @@ from slowapi.extension import _rate_limit_exceeded_handler
 from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.middleware.ratelimit_middleware import limiter
+from app.config.settings import settings
+from app.invoice.router import router as invoice_router
+from app.middleware.ratelimit_middleware import PayloadExtractorMiddleware, limiter
+from app.scheduler import start_scheduler
+from app.user.admin_router import admin_router
+from app.user.router import router as user_router
 
-from .config.settings import settings
-from .invoice.router import router as invoice_router
-from .user.router import router as user_router
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(invoice_router)
 app.include_router(user_router)
+app.include_router(admin_router)
 
 app.state.limiter = limiter
 
@@ -30,6 +41,7 @@ oauth.register(
     server_metadata_url="https://google.com",
     client_kwargs={"scope": "openid email profile"},
 )
+app.add_middleware(PayloadExtractorMiddleware)
 
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(SessionMiddleware, secret_key=settings.GOOGLE_SECRET_KEY)

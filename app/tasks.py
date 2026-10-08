@@ -1,12 +1,9 @@
 import asyncio
 import logging
 import os
-import re
 import time
-import uuid
 
 from celery import shared_task
-from celery.utils import gen_unique_id
 
 from app.config.celery_config import celery
 from app.config.settings import settings
@@ -103,9 +100,7 @@ async def render_html_to_pdf_background_task(
         return result_payload
 
     except Exception as exc:
-        logger.warning(
-            f"PDF generation failed: {str(exc)}. Retries left: {retries_left}"
-        )
+        logger.warning(f"PDF generation failed: {exc!s}. Retries left: {retries_left}")
 
         if retries_left > 0:
             update_task_state(task_id, "RETRY", result=str(exc))
@@ -122,7 +117,7 @@ async def render_html_to_pdf_background_task(
             )
         else:
             logger.error(
-                f"Task failed permanently after exhausting all retries. Exception: {str(exc)}"
+                f"Task failed permanently after exhausting all retries. Exception: {exc!s}"
             )
             update_task_state(task_id, "FAILURE", result=str(exc))
             raise exc
