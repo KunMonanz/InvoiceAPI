@@ -1,11 +1,8 @@
 import uuid
-from datetime import timedelta
-from nt import access
 
 from argon2 import verify_password
 
 # from app.main import oauth
-from authlib.integrations.starlette_client import OAuthError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from app.security.dependency import get_current_user
