@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import _rate_limit_exceeded_handler
 from slowapi.middleware import SlowAPIMiddleware
@@ -37,6 +38,14 @@ app = FastAPI(
 app.include_router(invoice_router)
 app.include_router(user_router)
 app.include_router(admin_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "https://vercel.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.state.limiter = limiter
 
