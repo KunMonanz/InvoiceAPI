@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from app.invoice.responses import CREATE_INVOICE_TASK, GET_TASK_STATUS
 from app.invoice.taskstore import get_task_state, update_task_state
+from app.middleware.ratelimit_middleware import limiter
 from app.tasks import render_html_to_pdf_background_task
 
 from .schema import InvoiceList, TaskStatusResponse
@@ -22,6 +23,7 @@ router = APIRouter(prefix="/api/v1/invoices", tags=["Invoices"])
     description="Asynchronously generates a PDF invoice using native background tasks.",
     responses=CREATE_INVOICE_TASK,
 )
+@limiter.limit("5/day")
 async def create_invoice(
     request: Request, payload: InvoiceList, background_tasks: BackgroundTasks
 ):

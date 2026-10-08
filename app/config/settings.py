@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -34,6 +35,10 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     ADMIN_CRON_SECRET: str | None = None
+
+    ENVIRONMENT: Literal["development", "production"] = Field(
+        default="development", description="Environment type"
+    )
 
     @computed_field
     @property

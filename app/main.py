@@ -14,6 +14,15 @@ from app.scheduler import start_scheduler
 from app.user.admin_router import admin_router
 from app.user.router import router as user_router
 
+if settings.ENVIRONMENT == "production":
+    docs_url = None
+    redoc_url = None
+    openapi_url = None
+else:
+    docs_url = "/docs"
+    redoc_url = "/redoc"
+    openapi_url = "/openapi.json"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,7 +30,9 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan, docs_url=docs_url, redoc_url=redoc_url, openapi_url=openapi_url
+)
 
 app.include_router(invoice_router)
 app.include_router(user_router)
