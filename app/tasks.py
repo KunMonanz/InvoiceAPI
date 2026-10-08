@@ -10,6 +10,7 @@ from celery.utils import gen_unique_id
 
 from app.config.celery_config import celery
 from app.config.settings import settings
+from app.invoice.taskstore import update_task_state
 from app.invoice.utils.pdf_utils import generate_pdf_file_name, render_html_to_pdf
 
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
@@ -70,6 +71,7 @@ def render_html_to_pdf_task(
 
 
 async def render_html_to_pdf_background_task(
+    task_id: str,
     customer_name: str,
     items: list[dict],
     business_name: str | None = None,
@@ -78,6 +80,9 @@ async def render_html_to_pdf_background_task(
 ):
     """FastAPI Background Task to render HTML to PDF and save it to disk with built-in retries."""
     try:
+        if retries_left == 3:
+            update_task_state(task_id, "STARTED")
+
         pdf_bytes = render_html_to_pdf(customer_name, items, business_name)
 
         file_name_path_dto = generate_pdf_file_name(customer_name)
@@ -88,11 +93,14 @@ async def render_html_to_pdf_background_task(
             f.write(pdf_bytes)
 
         logger.info(f"Successfully generated PDF: {file_name_path_dto.filename}")
-        return {
+
+        result_payload = {
             "filename": file_name_path_dto.filename,
             "file_path": file_name_path_dto.file_path,
             "status": "completed",
         }
+        update_task_state(task_id, "SUCCESS", result=result_payload)
+        return result_payload
 
     except Exception as exc:
         logger.warning(
@@ -100,9 +108,12 @@ async def render_html_to_pdf_background_task(
         )
 
         if retries_left > 0:
+            update_task_state(task_id, "RETRY", result=str(exc))
+
             await asyncio.sleep(delay)
 
             await render_html_to_pdf_background_task(
+                task_id=task_id,
                 customer_name=customer_name,
                 items=items,
                 business_name=business_name,
@@ -113,4 +124,5 @@ async def render_html_to_pdf_background_task(
             logger.error(
                 f"Task failed permanently after exhausting all retries. Exception: {str(exc)}"
             )
+            update_task_state(task_id, "FAILURE", result=str(exc))
             raise exc
