@@ -1,14 +1,20 @@
+import asyncio
+import logging
 import os
 import re
 import time
 import uuid
 
 from celery import shared_task
+from celery.utils import gen_unique_id
 
 from app.config.celery_config import celery
 from app.config.settings import settings
+from app.invoice.utils.pdf_utils import generate_pdf_file_name, render_html_to_pdf
 
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+
+logger = logging.getLogger(__name__)
 
 
 @celery.task
@@ -46,20 +52,65 @@ def render_html_to_pdf_task(
 
         pdf_bytes = render_html_to_pdf(customer_name, items, business_name)
 
-        safe_name = re.sub(r"[^\w\-]", "_", customer_name.strip())
-        unique_id = uuid.uuid4().hex[:8]
-        filename = f"invoice_{safe_name}_{unique_id}.pdf"
-        file_path = os.path.join(settings.UPLOAD_DIR, filename)
+        file_name_path_dto = generate_pdf_file_name(customer_name)
 
         os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-        with open(file_path, "wb") as f:
+        with open(file_name_path_dto.file_path, "wb") as f:
             f.write(pdf_bytes)
 
+        logger.info(f"Successfully generated PDF: {file_name_path_dto.filename}")
         return {
-            "filename": filename,
-            "file_path": file_path,
+            "filename": file_name_path_dto.filename,
+            "file_path": file_name_path_dto.file_path,
             "status": "completed",
         }
 
     except Exception as exc:
         raise self.retry(exc=exc)
+
+
+async def render_html_to_pdf_background_task(
+    customer_name: str,
+    items: list[dict],
+    business_name: str | None = None,
+    retries_left: int = 3,
+    delay: int = 60,
+):
+    """FastAPI Background Task to render HTML to PDF and save it to disk with built-in retries."""
+    try:
+        pdf_bytes = render_html_to_pdf(customer_name, items, business_name)
+
+        file_name_path_dto = generate_pdf_file_name(customer_name)
+
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+
+        with open(file_name_path_dto.file_path, "wb") as f:
+            f.write(pdf_bytes)
+
+        logger.info(f"Successfully generated PDF: {file_name_path_dto.filename}")
+        return {
+            "filename": file_name_path_dto.filename,
+            "file_path": file_name_path_dto.file_path,
+            "status": "completed",
+        }
+
+    except Exception as exc:
+        logger.warning(
+            f"PDF generation failed: {str(exc)}. Retries left: {retries_left}"
+        )
+
+        if retries_left > 0:
+            await asyncio.sleep(delay)
+
+            await render_html_to_pdf_background_task(
+                customer_name=customer_name,
+                items=items,
+                business_name=business_name,
+                retries_left=retries_left - 1,
+                delay=delay,
+            )
+        else:
+            logger.error(
+                f"Task failed permanently after exhausting all retries. Exception: {str(exc)}"
+            )
+            raise exc

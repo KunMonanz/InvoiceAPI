@@ -11,7 +11,7 @@ from app.tasks import render_html_to_pdf_task
 
 from .schema import InvoiceList, TaskStatusResponse
 
-router = APIRouter(prefix="/api/v1/invoices")
+router = APIRouter(prefix="/api/v1/invoices", tags=["Invoices"])
 
 
 @router.post(

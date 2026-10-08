@@ -1,7 +1,11 @@
 import os
+import re
+import uuid
 
 from jinja2 import Environment, FileSystemLoader
 
+from app.config.settings import settings
+from app.invoice.dto import FilenamePathDTO
 from app.invoice.error import MissingTemplateException
 
 os.getenv("WEASYPRINT_DLL_DIRECTORIES")
@@ -60,3 +64,16 @@ def render_html_to_pdf(
         return HTML(string=html).write_pdf()
     except Exception:
         raise
+
+
+def generate_pdf_file_name(customer_name: str) -> FilenamePathDTO:
+    """Generates a unique PDF file name based on the customer name and a UUID.
+
+    Args:
+        customer_name: The name of the customer for whom the invoice is generated.
+    """
+    safe_name = re.sub(r"[^\w\-]", "_", customer_name.strip())
+    unique_id = uuid.uuid4().hex[:8]
+    filename = f"invoice_{safe_name}_{unique_id}.pdf"
+    file_path = os.path.join(settings.UPLOAD_DIR, filename)
+    return FilenamePathDTO(filename=filename, file_path=file_path)

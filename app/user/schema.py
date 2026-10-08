@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Literal, Optional
+from weakref import ref
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator, model_validator
 
@@ -55,3 +56,17 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: Literal["bearer"]
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+class MessageResponse(BaseModel):
+    message: str

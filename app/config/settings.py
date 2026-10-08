@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     DB_PORT: int = Field(default=5432)
     DB_NAME: str = Field(default="postgres")
 
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
     @computed_field
     @property
     def TORTOISE_DATABASE_URL(self) -> str:

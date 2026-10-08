@@ -1,5 +1,6 @@
 import uuid
 from datetime import timedelta
+from nt import access
 
 from argon2 import verify_password
 
@@ -8,13 +9,24 @@ from authlib.integrations.starlette_client import OAuthError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from app.security.dependency import get_current_user
-from app.security.jwt import create_access_token, decode_access_token
+from app.security.jwt import (
+    create_access_token,
+    create_refresh_token,
+    decode_access_token,
+)
 from app.security.password import dummy_hash_and_verify
 from app.user.crud import UserRepository
-from app.user.schema import UserLogin, UserRegister, UserResponse
+from app.user.schema import (
+    MessageResponse,
+    RefreshTokenRequest,
+    TokenResponse,
+    UserLogin,
+    UserRegister,
+    UserResponse,
+)
 from app.user.utils import get_jwt_from_headers
 
-router = APIRouter(prefix="/api/v1/auth")
+router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
 user_repository = UserRepository()
 
@@ -88,8 +100,14 @@ async def create_user(
     )
 
 
-@router.post("/login")
-async def login(user_login_payload: UserLogin):
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    summary="Login user and return access and refresh tokens",
+)
+async def login(
+    user_login_payload: UserLogin,
+):
     user = await user_repository.get_user_by_email(user_login_payload.email)
 
     invalid_email_or_password_exception = HTTPException(
@@ -105,11 +123,19 @@ async def login(user_login_payload: UserLogin):
     if not verify_password(user.password, user_login_payload.password):  # type: ignore
         raise invalid_email_or_password_exception
 
-    data = {"sub": str(user.id), "jti": str(uuid.uuid4)}
+    access_jti = str(uuid.uuid4())
+    refresh_jti = str(uuid.uuid4())
 
-    access_token = create_access_token(data, timedelta(hours=24))
+    data = {"sub": str(user.id), "jti": access_jti, "refresh_jti": refresh_jti}
 
-    return Response({"access_token": access_token, "token_type": "bearer"})
+    access_token = await create_access_token(data=data)
+    refresh_token = await create_refresh_token(data=data)
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+    )
 
 
 @router.post("/logout")
@@ -127,6 +153,46 @@ async def logout(request: Request):
     )
 
 
+@router.post(
+    "/refresh",
+    response_model=TokenResponse,
+    summary="Refresh access token",
+)
+async def refresh_access_token(payload: RefreshTokenRequest):
+    token_data = await decode_access_token(
+        payload.refresh_token, expected_type="refresh"
+    )
+    user_id = token_data.get("sub")
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+
+    user = await user_repository.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated"
+        )
+
+    new_access_token = await create_access_token(
+        data={"sub": str(user.id), "jti": str(uuid.uuid4())}
+    )
+    new_refresh_token = await create_refresh_token(
+        data={"sub": str(user.id), "jti": str(uuid.uuid4())}
+    )
+
+    return TokenResponse(
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        token_type="bearer",
+    )
+
+
 @router.patch("/deactivate")
 async def deactivate(current_user=Depends(get_current_user)):
     await user_repository.deactivate_user(current_user)
@@ -135,9 +201,20 @@ async def deactivate(current_user=Depends(get_current_user)):
     )
 
 
-@router.patch("/activate")
-async def activate(current_user=Depends(get_current_user)):
-    await user_repository.activate_user(current_user)
-    return Response(
-        {"success": "Account reactivated successfully"}, status_code=status.HTTP_200_OK
-    )
+@router.patch(
+    "/activate",
+    response_model=MessageResponse,
+    summary="Reactivate user account",
+)
+async def activate(
+    login_payload: UserLogin,
+):
+    user = await user_repository.get_user_by_email(login_payload.email)
+    if not user or not verify_password(login_payload.password, user.password):  # pyright: ignore[reportArgumentType]
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
+
+    await user_repository.activate_user(user)
+    return {"message": "Account reactivated successfully"}
